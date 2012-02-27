@@ -15,13 +15,16 @@
 
          for (var name in root)
          {
-             var item = root[name];
-
-             if (!item['rotated'])
+             if (root.hasOwnProperty(name))
              {
-                 var f = item['frame'];
-                 animations[name] = [count++];
-                 frames.push([f['x'], f['y'], f['w'], f['h']]);
+                 var item = root[name];
+
+                 if (!item['rotated'])
+                 {
+                     var f = item['frame'];
+                     animations[name] = [count++];
+                     frames.push([f['x'], f['y'], f['w'], f['h']]);
+                 }
              }
          }
          this.super_initialize({animations: animations, frames: frames, images: [image]});

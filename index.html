@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <script type="text/javascript" src="/EaselJS/src/easeljs/geom/Matrix2D.js"></script>
+    <script type="text/javascript" src="/EaselJS/src/easeljs/geom/Point.js"></script>
     <script type="text/javascript" src="/EaselJS/src/easeljs/geom/Rectangle.js"></script>
     <script type="text/javascript" src="/EaselJS/src/easeljs/ui/Touch.js"></script>
     <script type="text/javascript" src="/EaselJS/src/easeljs/utils/SpriteSheetUtils.js"></script>
@@ -13,8 +14,13 @@
     <script type="text/javascript" src="/EaselJS/src/easeljs/display/Container.js"></script>
     <script type="text/javascript" src="/EaselJS/src/easeljs/display/SpriteSheet.js"></script>
     <script type="text/javascript" src="/EaselJS/src/easeljs/display/Stage.js"></script>
+    <script type="text/javascript" src="/EaselJS/src/easeljs/events/MouseEvent.js"></script>
+    <script type="text/javascript" src="helpers.js"></script>
     <script type="text/javascript" src="spritesheet.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <style type="text/css">
+      #container canvas { border: 1px solid black; }
+    </style>
   </head>
   <body onload="game_start(document.getElementById('container'), 400, 400)">
     <div id="container"></div>

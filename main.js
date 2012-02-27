@@ -3,54 +3,90 @@
 (function (window)
  {
      var BITMAPS_ANSWERS = ['a-1.png', 'a-2.png', 'a-3.png', 'a-4.png', 'a-5.png', 'a-6.png', 'a-7.png', 'a-8.png', 'a-9.png'];
-     var BITMAPS_QUESTIONS = ['q-1-plus-2.png', 'q-4-minus-3.png', 'q-9-minus-1.png'];
+     var BITMAPS_QUESTIONS = {
+         'q-1-plus-2.png': 'a-3.png',
+         'q-4-minus-3.png': 'a-1.png',
+         'q-9-minus-1.png': 'a-8.png'
+     };
 
-     var REQUIRED_SIZE = {w: 400, h: 400};
+     var QUESTION_POSITION = {x: 200, y: 500};
+     var REQUIRED_SIZE = {w: 1000, h: 1000};
      var SPRITESHEET_URL = 'arithmetic.png';
 
      var _actualsize;
      var _assets;
      var _container;
      var _spritesheet;
+     var _stage;
+     var _update = true;
 
-     if (typeof(DisplayObject) !== 'undefined')
+     function get_answer_position(prev, current)
      {
-         DisplayObject.prototype.setPosition = function (p)
-         {
-             if (p)
-             {
-                 this.x = p.x;
-                 this.y = p.y;
-             }
-         };
+         var x = Math.floor(Math.random() * (QUESTION_POSITION.x - current.image.width + 1));
+         return new Point(x, prev ? (prev.y + prev.image.height): 0);
      }
 
-     function show_answers(parent)
+     function show_answers()
      {
-         var b = parent.addChild(_assets.bitmapFromFrame(BITMAPS_ANSWERS[0]));
+         shuffle(BITMAPS_ANSWERS);
+
+         var count = BITMAPS_ANSWERS.length;
+         var prev_answer;
+
+         for (var i = 0; i < count; i++)
+         {
+             var answer = _stage.addChild(_assets.bitmapFromFrame(BITMAPS_ANSWERS[i]));
+             answer.setPosition(get_answer_position(prev_answer, answer));
+             prev_answer = answer;
+         }
+     }
+
+     function show_question()
+     {
+         var keys = BITMAPS_QUESTIONS.keys();
+         var name = keys[Math.floor(Math.random() * keys.length)];
+         var question = _stage.addChild(_assets.bitmapFromFrame(name));
+
+         question.setPosition(QUESTION_POSITION);
+     }
+
+     function shuffle(list)
+     {
+         for (var i = 1, count = list.length; i < count; i++)
+         {
+             var j = Math.floor(Math.random() * (i + 1)); // choose j in [0..i]
+
+             if (j != i)
+             {
+                 var t = list[i];
+                 list[i] = list[j];
+                 list[j] = t;
+             }
+         }
      }
 
      function spritesheet_onload(e)
      {
          var canvas = _container.appendChild(document.createElement('canvas'));
-         var stage = new Stage(canvas);
 
          canvas.height = _actualsize.h;
          canvas.width = _actualsize.w;
 
-         stage.scaleX = _actualsize.w / REQUIRED_SIZE.w;
-         stage.scaleY = _actualsize.h / REQUIRED_SIZE.h;
+         _stage = new Stage(canvas);
+
+         _stage.scaleX = _actualsize.w / REQUIRED_SIZE.w;
+         _stage.scaleY = _actualsize.h / REQUIRED_SIZE.h;
 
          if (Touch.isSupported())
          {
-             Touch.enable(stage);
+             Touch.enable(_stage);
          }
          _assets = new TexturePackerSpriteSheet(_spritesheet, FRAMES);
 
-         show_answers(stage);
+         show_answers();
+         show_question();
 
-         Ticker.setFPS(20);
-         Ticker.addListener(stage);
+         Ticker.addListener(window);
      }
 
      function start(container, w, h)
@@ -60,6 +96,15 @@
          _spritesheet = new Image();
          _spritesheet.src = SPRITESHEET_URL;
          _spritesheet.onload = spritesheet_onload;
+     }
+
+     function tick()
+     {
+         if (_update)
+         {
+             _update = false;
+             _stage.update();
+         }
      }
 
      FRAMES =
@@ -173,4 +218,5 @@
 }
      ;
      window['game_start'] = start;
+     window['tick'] = tick;
  }(window));
