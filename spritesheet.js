@@ -43,6 +43,7 @@
                  b.image.width = d.rect.width;
              }
          }
+         b.frame = frame;
          return b;
      };
 

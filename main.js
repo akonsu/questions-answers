@@ -9,14 +9,21 @@
          'q-4-minus-3.png': 'a-1.png',
          'q-9-minus-1.png': 'a-8.png'
      };
+     var DROP_TARGET = {
+         POSITION: {x: 500, y: 500},
+         RADIUS: 50,
+         STROKE: {COLOR: '#9ade00', WIDTH: 5}
+     };
 
      var QUESTION_POSITION = {x: 200, y: 500};
      var REQUIRED_SIZE = {w: 1000, h: 1000};
      var SPRITESHEET_URL = 'arithmetic.png';
 
      var _actualsize;
+     var _answer;
      var _assets;
      var _container;
+     var _droptarget;
      var _loaded;
      var _stage;
      var _tween;
@@ -26,13 +33,17 @@
      {
          var children = _stage.children.slice(0);
          var count = children.length;
-         var complete = true;
 
          for (var i = 0; i < count; i++)
          {
-             complete = complete && children[i].image.complete;
+             var child = children[i];
+
+             if (child.image && !child.image.complete)
+             {
+                 return false;
+             }
          }
-         return complete;
+         return true;
      }
 
      function get_answer_position(prev, current)
@@ -51,8 +62,8 @@
          for (var i = 0; i < count; i++)
          {
              var answer = _stage.addChild(_assets.bitmapFromFrame(BITMAPS_ANSWERS[i]));
-             answer.setPosition(get_answer_position(prev_answer, answer));
 
+             answer.setPosition(get_answer_position(prev_answer, answer));
              answer.orig_x = answer.x;
              answer.orig_y = answer.y;
 
@@ -79,12 +90,22 @@
 
                       e.onMouseUp = function (v)
                       {
-                          var f = function ()
+
+                          var p = _droptarget.globalToLocal(v.stageX, v.stageY);
+
+                          if (target.frame === _answer && Math.sqrt(p.x * p.x + p.y * p.y) < DROP_TARGET.RADIUS)
                           {
-                              _tween = null;
-                              _update = true;
-                          };
-                          _tween = Tween.get(target, {override: true}).to({x: target.orig_x, y: target.orig_y}, ANSWER_TWEEN_DURATION).call(f);
+                              target.onPress = null;
+                          }
+                          else
+                          {
+                              var f = function ()
+                              {
+                                  _tween = null;
+                                  _update = true;
+                              };
+                              _tween = Tween.get(target, {override: true}).to({x: target.orig_x, y: target.orig_y}, ANSWER_TWEEN_DURATION).call(f);
+                          }
                       };
                   };
               })(answer);
@@ -94,10 +115,21 @@
      function show_question()
      {
          var keys = BITMAPS_QUESTIONS.keys();
-         var name = keys[Math.floor(Math.random() * keys.length)];
-         var question = _stage.addChild(_assets.bitmapFromFrame(name));
+         var frame = keys[Math.floor(Math.random() * keys.length)];
+         var question = _stage.addChild(_assets.bitmapFromFrame(frame));
 
          question.setPosition(QUESTION_POSITION);
+
+         _answer = BITMAPS_QUESTIONS[frame];
+     }
+
+     function show_drop_target()
+     {
+         var r = DROP_TARGET.RADIUS + DROP_TARGET.STROKE.WIDTH;
+         _droptarget = _stage.addChild(new Shape());
+         _droptarget.graphics.setStrokeStyle(DROP_TARGET.STROKE.WIDTH).beginStroke(DROP_TARGET.STROKE.COLOR).drawCircle(0, 0, DROP_TARGET.RADIUS);
+         _droptarget.cache(-r, -r, r * 2, r * 2);
+         _droptarget.setPosition(DROP_TARGET.POSITION);
      }
 
      function shuffle(list)
@@ -135,6 +167,7 @@
 
          show_answers();
          show_question();
+         show_drop_target();
 
          //Ticker.setFPS(20);
          Ticker.addListener(window);
