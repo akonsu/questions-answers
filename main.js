@@ -2,6 +2,18 @@
 
 (function (window)
  {
+     if (typeof(DisplayObject) !== 'undefined')
+     {
+         DisplayObject.prototype.setPosition = function (p)
+         {
+             if (p)
+             {
+                 this.x = p.x;
+                 this.y = p.y;
+             }
+         };
+     }
+
      var ANSWER_TWEEN_DURATION = 1000;
      var BITMAPS_ANSWERS = ['a-1.png', 'a-2.png', 'a-3.png', 'a-4.png', 'a-5.png', 'a-6.png', 'a-7.png', 'a-8.png', 'a-9.png'];
      var BITMAPS_QUESTIONS = {
@@ -114,13 +126,27 @@
 
      function show_question()
      {
-         var keys = BITMAPS_QUESTIONS.keys();
-         var frame = keys[Math.floor(Math.random() * keys.length)];
-         var question = _stage.addChild(_assets.bitmapFromFrame(frame));
+         var count = 1;
+         var frame;
 
-         question.setPosition(QUESTION_POSITION);
-
-         _answer = BITMAPS_QUESTIONS[frame];
+         // pick question at random
+         for (var k in BITMAPS_QUESTIONS)
+         {
+             if (BITMAPS_QUESTIONS.hasOwnProperty(k))
+             {
+                 if (Math.random() < 1 / count)
+                 {
+                     frame = k;
+                 }
+                 count++;
+             }
+         }
+         if (frame)
+         {
+             var question = _stage.addChild(_assets.bitmapFromFrame(frame));
+             question.setPosition(QUESTION_POSITION);
+             _answer = BITMAPS_QUESTIONS[frame];
+         }
      }
 
      function show_drop_target()
