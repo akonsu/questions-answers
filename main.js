@@ -2,6 +2,7 @@
 
 (function (window)
  {
+     var ANSWER_TWEEN_DURATION = 1000;
      var BITMAPS_ANSWERS = ['a-1.png', 'a-2.png', 'a-3.png', 'a-4.png', 'a-5.png', 'a-6.png', 'a-7.png', 'a-8.png', 'a-9.png'];
      var BITMAPS_QUESTIONS = {
          'q-1-plus-2.png': 'a-3.png',
@@ -16,9 +17,23 @@
      var _actualsize;
      var _assets;
      var _container;
-     var _spritesheet;
+     var _loaded;
      var _stage;
+     var _tween;
      var _update = true;
+
+     function frames_loaded()
+     {
+         var children = _stage.children.slice(0);
+         var count = children.length;
+         var complete = true;
+
+         for (var i = 0; i < count; i++)
+         {
+             complete = complete && children[i].image.complete;
+         }
+         return complete;
+     }
 
      function get_answer_position(prev, current)
      {
@@ -37,7 +52,42 @@
          {
              var answer = _stage.addChild(_assets.bitmapFromFrame(BITMAPS_ANSWERS[i]));
              answer.setPosition(get_answer_position(prev_answer, answer));
+
+             answer.orig_x = answer.x;
+             answer.orig_y = answer.y;
+
              prev_answer = answer;
+
+             (function (target)
+              {
+                  target.onPress = function (e)
+                  {
+                      // set z-order to top
+                      _stage.addChild(target);
+
+                      var offset = {
+                          x: target.x - e.stageX / _stage.scaleX,
+                          y: target.y - e.stageY / _stage.scaleY
+                      };
+
+                      e.onMouseMove = function (v)
+                      {
+                          target.x = v.stageX / _stage.scaleX + offset.x;
+                          target.y = v.stageY / _stage.scaleY + offset.y;
+                          _update = true;
+                      };
+
+                      e.onMouseUp = function (v)
+                      {
+                          var f = function ()
+                          {
+                              _tween = null;
+                              _update = true;
+                          };
+                          _tween = Tween.get(target, {override: true}).to({x: target.orig_x, y: target.orig_y}, ANSWER_TWEEN_DURATION).call(f);
+                      };
+                  };
+              })(answer);
          }
      }
 
@@ -81,11 +131,12 @@
          {
              Touch.enable(_stage);
          }
-         _assets = new TexturePackerSpriteSheet(_spritesheet, FRAMES);
+         _assets = new TexturePackerSpriteSheet(e.target, FRAMES);
 
          show_answers();
          show_question();
 
+         //Ticker.setFPS(20);
          Ticker.addListener(window);
      }
 
@@ -93,17 +144,28 @@
      {
          _actualsize = {w: isNaN(w) ? REQUIRED_SIZE.w : w, h: isNaN(h) ? REQUIRED_SIZE.h : h};
          _container = container;
-         _spritesheet = new Image();
-         _spritesheet.src = SPRITESHEET_URL;
-         _spritesheet.onload = spritesheet_onload;
+
+         var spritesheet = new Image();
+         spritesheet.src = SPRITESHEET_URL;
+         spritesheet.onload = spritesheet_onload;
      }
 
-     function tick()
+     function tick(delta)
      {
+         if (!_loaded && frames_loaded())
+         {
+             _loaded = true;
+             _update = true;
+         }
+         if (_tween)
+         {
+             Tween.tick(delta);
+             _update = true;
+         }
          if (_update)
          {
-             _update = false;
              _stage.update();
+             _update = false;
          }
      }
 
