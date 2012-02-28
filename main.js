@@ -14,7 +14,7 @@
          };
      }
 
-     var ANSWER_TWEEN_DURATION = 1000;
+     var ANSWER_TWEEN_DURATION = 10000;
      var BITMAPS_ANSWERS = ['a-1.png', 'a-2.png', 'a-3.png', 'a-4.png', 'a-5.png', 'a-6.png', 'a-7.png', 'a-8.png', 'a-9.png'];
      var BITMAPS_QUESTIONS = {
          'q-1-plus-2.png': 'a-3.png',
@@ -27,7 +27,7 @@
          STROKE: {COLOR: '#9ade00', WIDTH: 5}
      };
 
-     var QUESTION_POSITION = {x: 200, y: 500};
+     var QUESTION_POSITION = {x: 350, y: 500};
      var REQUIRED_SIZE = {w: 1000, h: 1000};
      var SPRITESHEET_URL = 'arithmetic.png';
 
@@ -37,8 +37,8 @@
      var _container;
      var _droptarget;
      var _loaded;
+     var _question;
      var _stage;
-     var _tween;
      var _update = true;
 
      function frames_loaded()
@@ -60,8 +60,10 @@
 
      function get_answer_position(prev, current)
      {
-         var x = Math.floor(Math.random() * (QUESTION_POSITION.x - current.image.width + 1));
-         return new Point(x, prev ? (prev.y + prev.image.height): 0);
+         var x0 = current.image.width / 2;
+         var x1 = QUESTION_POSITION.x - _question.image.width / 2 - x0;
+         var x = Math.floor(Math.random() * (x1 - x0 + 1)) + x0;
+         return new Point(x, (prev ? (prev.y + prev.image.height / 2) : 0) + current.image.height / 2);
      }
 
      function show_answers()
@@ -75,7 +77,10 @@
          {
              var answer = _stage.addChild(_assets.bitmapFromFrame(BITMAPS_ANSWERS[i]));
 
+             answer.regX = answer.image.width / 2;
+             answer.regY = answer.image.height / 2;
              answer.setPosition(get_answer_position(prev_answer, answer));
+
              answer.orig_x = answer.x;
              answer.orig_y = answer.y;
 
@@ -87,6 +92,8 @@
                   {
                       // set z-order to top
                       _stage.addChild(target);
+
+                      Tween.removeTweens(target);
 
                       var offset = {
                           x: target.x - e.stageX / _stage.scaleX,
@@ -102,21 +109,17 @@
 
                       e.onMouseUp = function (v)
                       {
-
                           var p = _droptarget.globalToLocal(v.stageX, v.stageY);
 
                           if (target.frame === _answer && Math.sqrt(p.x * p.x + p.y * p.y) < DROP_TARGET.RADIUS)
                           {
                               target.onPress = null;
+                              Tween.get(target, {override: true}).to({x: _droptarget.x, y: _droptarget.y}, ANSWER_TWEEN_DURATION);
+                              Tween.get(_droptarget, {override: true}).to({alpha: 0}, ANSWER_TWEEN_DURATION);
                           }
                           else
                           {
-                              var f = function ()
-                              {
-                                  _tween = null;
-                                  _update = true;
-                              };
-                              _tween = Tween.get(target, {override: true}).to({x: target.orig_x, y: target.orig_y}, ANSWER_TWEEN_DURATION).call(f);
+                              Tween.get(target, {override: true}).to({x: target.orig_x, y: target.orig_y}, ANSWER_TWEEN_DURATION);
                           }
                       };
                   };
@@ -134,7 +137,7 @@
          {
              if (BITMAPS_QUESTIONS.hasOwnProperty(k))
              {
-                 if (Math.random() < 1 / count)
+                 if (Math.random() * count < 1)
                  {
                      frame = k;
                  }
@@ -143,8 +146,10 @@
          }
          if (frame)
          {
-             var question = _stage.addChild(_assets.bitmapFromFrame(frame));
-             question.setPosition(QUESTION_POSITION);
+             _question = _stage.addChild(_assets.bitmapFromFrame(frame));
+             _question.regX = _question.image.width / 2;
+             _question.regY = _question.image.height / 2;
+             _question.setPosition(QUESTION_POSITION);
              _answer = BITMAPS_QUESTIONS[frame];
          }
      }
@@ -191,11 +196,11 @@
          }
          _assets = new TexturePackerSpriteSheet(e.target, FRAMES);
 
-         show_answers();
          show_question();
+         show_answers();
          show_drop_target();
 
-         //Ticker.setFPS(20);
+         Ticker.setFPS(20);
          Ticker.addListener(window);
      }
 
@@ -216,7 +221,7 @@
              _loaded = true;
              _update = true;
          }
-         if (_tween)
+         if (Tween._tweens && Tween._tweens.length > 0)
          {
              Tween.tick(delta);
              _update = true;
