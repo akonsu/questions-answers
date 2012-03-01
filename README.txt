@@ -77,3 +77,10 @@
        displayed before the current one; this is useful if you want to
        position answers relative to each other, if you do not, then
        ignore it
+
+3. to start the game
+
+   call window.game_start and give it the div element that will
+   contain the canvas, and the actual width and height of the canvas
+   in pixels (the canvas will be scaled using REQUIRED_SIZE above to
+   fit in these dimentions)
