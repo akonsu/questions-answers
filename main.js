@@ -234,6 +234,7 @@
      }
 
      FRAMES =
+         // BEGIN TEXTUREPACKER JSON
 {"frames": {
 
 "a-1.png":
@@ -342,6 +343,7 @@
 	"smartupdate": "$TexturePacker:SmartUpdate:4a6382510156ad654908d0467418436c$"
 }
 }
+         // END TEXTUREPACKER JSON
      ;
      window['game_start'] = start;
      window['tick'] = tick;
